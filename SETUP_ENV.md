@@ -24,7 +24,7 @@
 
 1. Go to https://www.notion.so/my-integrations
 2. Click **+ New integration**
-3. Name it "JobTracker"
+3. Name it "JobSync"
 4. Select the workspace
 5. Click **Submit**
 6. Copy the **Internal Integration Token**
@@ -57,7 +57,7 @@ NOTION_TOKEN=secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 - Open the database in Notion
 - Click **...** (top right) → **Add connections**
-- Select your "JobTracker" integration
+- Select your "JobSync" integration
 
 **Step 3: Get the database ID:**
 
@@ -93,7 +93,7 @@ NOTION_DATABASE_ID=abcdef1234567890abcdef1234567890
 
 - Open the database in Notion
 - Click **...** (top right) → **Add connections**
-- Select your "JobTracker" integration
+- Select your "JobSync" integration
 
 **Step 3: Get the database ID:**
 
@@ -159,7 +159,7 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 
 1. Go to https://console.cloud.google.com/
 2. Click **Select a project** → **New Project**
-3. Name it "JobTracker" → **Create**
+3. Name it "JobSync" → **Create**
 4. Wait for project creation (check notification bell)
 
 #### Step 2: Enable Gmail API
@@ -173,7 +173,7 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 1. Go to **APIs & Services** → **OAuth consent screen**
 2. Choose **External** → **Create**
 3. Fill in:
-   - **App name:** JobTracker
+   - **App name:** JobSync
    - **User support email:** Your email
    - **Developer contact:** Your email
 4. Click **Save and Continue**
@@ -189,7 +189,7 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 2. Click **+ Create Credentials** → **OAuth client ID**
 3. **Application type:** Select **Desktop app** (NOT Web application)
    - ⚠️ **IMPORTANT:** Must be "Desktop app" for `http://localhost` to work
-4. **Name:** JobTracker Desktop
+4. **Name:** JobSync Desktop
 5. Click **Create**
 6. Click **Download JSON** (or click the download icon ⬇️ in credentials list)
 
@@ -198,7 +198,7 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 1. Rename downloaded file to `credentials.json`
 2. Move it to `gmail_mcp/` folder in your project:
    ```
-   JobTracker/
+   JobSync/
    ├── gmail_mcp/
    │   ├── credentials.json  ← PUT IT HERE
    │   └── gmail_client.py
@@ -209,7 +209,7 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 1. Run the agent:
 
    ```bash
-   cd D:\Projects\JobTracker
+   cd D:\Projects\JobSync
    uv run agent/main.py
    ```
 
@@ -218,7 +218,7 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 4. **Grant permissions** (read Gmail)
 5. **If you see "Google hasn't verified this app":**
    - Click **Advanced**
-   - Click **Go to JobTracker (unsafe)** ← This is YOUR app, it's safe
+   - Click **Go to JobSync (unsafe)** ← This is YOUR app, it's safe
 6. **Success!** You'll see "The authentication flow has completed"
 7. A `token.json` file is created in `gmail_mcp/` folder (keeps you logged in)
 
@@ -288,7 +288,7 @@ The Weekly Report Agent automatically generates AI-powered summaries of your job
 
 Before setting up weekly reports:
 
-- ✅ Completed the main JobTracker setup (Gmail, OpenRouter, Notion)
+- ✅ Completed the main JobSync setup (Gmail, OpenRouter, Notion)
 - ✅ Successfully run the daily sync agent (`agent/main.py`)
 - ✅ At least a few job applications in your Notion database
 
@@ -307,7 +307,7 @@ Before setting up weekly reports:
 
    - Click **...** (three dots) on the database
    - Click **Add connections**
-   - Select your "JobTracker" integration
+   - Select your "JobSync" integration
 
 3. **Get the database ID:**
    - Open the database as a full page
@@ -329,7 +329,7 @@ NOTION_WEEKLY_REPORTS_DB_ID=your_weekly_reports_db_id_here
 ### Step 3: Test the Weekly Report Agent
 
 ```bash
-cd D:\Projects\JobTracker
+cd D:\Projects\JobSync
 uv run agent/weekly_report.py
 ```
 
@@ -369,13 +369,13 @@ uv run agent/weekly_report.py 30
 
 ```powershell
 # Windows
-schtasks /create /tn "JobTracker-Weekly" /tr "uv run D:\Projects\JobTracker\agent\weekly_report.py" /sc weekly /d MON /st 10:00
+schtasks /create /tn "JobSync-Weekly" /tr "uv run D:\Projects\JobSync\agent\weekly_report.py" /sc weekly /d MON /st 10:00
 ```
 
 ```bash
 # Linux/Mac
 crontab -e
-# Add: 0 10 * * 1 cd /path/to/JobTracker && uv run agent/weekly_report.py
+# Add: 0 10 * * 1 cd /path/to/JobSync && uv run agent/weekly_report.py
 ```
 
 ### Troubleshooting Weekly Reports
@@ -411,7 +411,7 @@ After setting up all components, test each one:
 ### 1. Test Gmail Authentication:
 
 ```bash
-cd D:\Projects\JobTracker
+cd D:\Projects\JobSync
 uv run python -c "from gmail_mcp.gmail_client import list_messages; print('Gmail:', len(list_messages()), 'messages')"
 ```
 
@@ -521,7 +521,7 @@ Should show:
 
 - Copy the ID from Notion URL (32 characters, no dashes)
 - Database must be shared with your integration
-- Open database → Click `...` → Add connections → Select JobTracker
+- Open database → Click `...` → Add connections → Select JobSync
 
 **"OPENROUTER_API_KEY not found"**
 

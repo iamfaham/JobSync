@@ -1,4 +1,4 @@
-# JobTracker
+# JobSync
 
 Automatically track job applications from Gmail to Notion using AI-powered email parsing.
 
@@ -18,7 +18,7 @@ Automatically track job applications from Gmail to Notion using AI-powered email
 ### Project Structure
 
 ```
-JobTracker/
+JobSync/
 ├── gmail_mcp/             # Gmail MCP server (optional - for AI tools)
 │   ├── gmail_client.py    # Gmail API client
 │   ├── gmail_server.py    # MCP server exposing Gmail tools
@@ -110,7 +110,7 @@ See [`GMAIL_OAUTH_SETUP.md`](./GMAIL_OAUTH_SETUP.md) for solutions.
 
 1. Go to [Notion Integrations](https://www.notion.so/my-integrations)
 2. Click **+ New integration**
-3. Give it a name (e.g., "JobTracker")
+3. Give it a name (e.g., "JobSync")
 4. Copy the **Internal Integration Token**
 
 **Create two databases:**
@@ -249,12 +249,12 @@ Add to your Claude Desktop config (`%APPDATA%\Claude\claude_desktop_config.json`
     "gmail": {
       "command": "uv",
       "args": ["run", "gmail_mcp/gmail_server.py"],
-      "cwd": "D:\\Projects\\JobTracker"
+      "cwd": "D:\\Projects\\JobSync"
     },
-    "jobtracker": {
+    "jobsync": {
       "command": "uv",
       "args": ["run", "notion_mcp_server.py"],
-      "cwd": "D:\\Projects\\JobTracker"
+      "cwd": "D:\\Projects\\JobSync"
     }
   }
 }
@@ -330,14 +330,14 @@ Run the daily sync every morning to process new job application emails:
 **Windows (Task Scheduler):**
 
 ```powershell
-schtasks /create /tn "JobTracker-Daily" /tr "uv run D:\Projects\JobTracker\agent\main.py" /sc daily /st 09:00
+schtasks /create /tn "JobSync-Daily" /tr "uv run D:\Projects\JobSync\agent\main.py" /sc daily /st 09:00
 ```
 
 **Linux/Mac (Cron):**
 
 ```bash
 crontab -e
-# Add: 0 9 * * * cd /path/to/JobTracker && uv run agent/main.py
+# Add: 0 9 * * * cd /path/to/JobSync && uv run agent/main.py
 ```
 
 ### Weekly Reports (Optional)
@@ -347,14 +347,14 @@ Generate a weekly summary every Monday morning:
 **Windows (Task Scheduler):**
 
 ```powershell
-schtasks /create /tn "JobTracker-Weekly" /tr "uv run D:\Projects\JobTracker\agent\weekly_report.py" /sc weekly /d MON /st 10:00
+schtasks /create /tn "JobSync-Weekly" /tr "uv run D:\Projects\JobSync\agent\weekly_report.py" /sc weekly /d MON /st 10:00
 ```
 
 **Linux/Mac (Cron):**
 
 ```bash
 crontab -e
-# Add: 0 10 * * 1 cd /path/to/JobTracker && uv run agent/weekly_report.py
+# Add: 0 10 * * 1 cd /path/to/JobSync && uv run agent/weekly_report.py
 ```
 
 ### Using schedule library

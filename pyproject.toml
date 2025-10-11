@@ -1,12 +1,16 @@
 [project]
-name = "jobtracker"
+name = "jobsync"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "google>=3.0.0",
+    "google-auth-oauthlib>=1.2.2",
+    "google-api-python-client>=2.150.0",
     "langchain>=0.3.27",
     "langchain-openai>=0.3.35",
     "mcp>=1.17.0",
     "notion-client>=2.5.0",
+    "python-dotenv>=1.0.0",
 ]

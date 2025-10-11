@@ -1,0 +1,21 @@
+# JobSync - Job Application Tracker
+# Python 3.13+ required
+
+# Google APIs (Gmail integration)
+google>=3.0.0
+google-auth-oauthlib>=1.2.2
+google-api-python-client>=2.150.0
+
+# LangChain (AI/LLM functionality)
+langchain>=0.3.27
+langchain-openai>=0.3.35
+
+# Model Context Protocol
+mcp>=1.17.0
+
+# Notion API
+notion-client>=2.5.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
