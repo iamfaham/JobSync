@@ -1,7 +1,7 @@
 [project]
 name = "jobsync"
 version = "0.1.0"
-description = "Add your description here"
+description = "Automatically track job applications from Gmail to Notion using AI-powered email parsing"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
