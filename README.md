@@ -123,7 +123,7 @@ NOTION_DATABASE_ID=your_job_applications_database_id
 NOTION_WEEKLY_REPORTS_DB_ID=your_weekly_reports_database_id
 
 # OpenRouter LLM Configuration
-OPENROUTER_API_KEY=your_openrouter_api_key
+OPENROUTER_KEY=your_openrouter_api_key
 OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 
 # Gmail OAuth (credentials.json required in gmail_mcp/)
@@ -246,7 +246,7 @@ Automate everything with GitHub Actions - no need to keep your computer running!
 - Add GitHub Secrets with raw JSON content (Settings → Secrets → Actions):
   - `GMAIL_CREDENTIALS` = contents of `gmail_mcp/credentials.json`
   - `GMAIL_TOKEN` = contents of `gmail_mcp/token.json`
-  - `NOTION_TOKEN`, `NOTION_DATABASE_ID`, `NOTION_WEEKLY_REPORTS_DB_ID`, `OPENROUTER_API_KEY`
+  - `NOTION_TOKEN`, `NOTION_DATABASE_ID`, `NOTION_WEEKLY_REPORTS_DB_ID`, `OPENROUTER_KEY`
 - Ensure workflow permissions: Settings → Actions → General → Read and write
 - Manually run each workflow once to verify
 

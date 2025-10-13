@@ -108,7 +108,7 @@ NOTION_WEEKLY_REPORTS_DB_ID=1234567890abcdef1234567890abcdef
 
 ---
 
-### 3. OPENROUTER_API_KEY
+### 3. OPENROUTER_KEY
 
 **What it is:** API key for OpenRouter (provides access to Claude/GPT models)
 
@@ -124,7 +124,7 @@ NOTION_WEEKLY_REPORTS_DB_ID=1234567890abcdef1234567890abcdef
 **Add to `.env`:**
 
 ```env
-OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+OPENROUTER_KEY=sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 ---
@@ -272,7 +272,7 @@ NOTION_DATABASE_ID=1234567890abcdef1234567890abcdef
 NOTION_WEEKLY_REPORTS_DB_ID=abcdef1234567890abcdef1234567890
 
 # OpenRouter LLM Configuration
-OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxx
+OPENROUTER_KEY=sk-or-v1-xxxxxxxxxxxx
 OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 
 # Gmail OAuth (handled separately - credentials.json in gmail_mcp/)
@@ -486,7 +486,7 @@ Should show:
 ### Environment Variables (.env)
 
 - **Never commit `.env` to git** (it's in `.gitignore`)
-- Keep your tokens secret (NOTION_TOKEN, OPENROUTER_API_KEY)
+- Keep your tokens secret (NOTION_TOKEN, OPENROUTER_KEY)
 - Don't share screenshots with tokens visible
 - Regenerate tokens if accidentally exposed
 
@@ -525,7 +525,7 @@ Settings → Secrets and variables → Actions → New repository secret
 - `NOTION_TOKEN`: from `.env`
 - `NOTION_DATABASE_ID`: from `.env`
 - `NOTION_WEEKLY_REPORTS_DB_ID`: from `.env`
-- `OPENROUTER_API_KEY`: from `.env`
+- `OPENROUTER_KEY`: from `.env`
 - Optional: `OPENROUTER_MODEL` (defaults to `anthropic/claude-3.5-sonnet`)
 
 ### 3) Workflows (already included)
@@ -581,7 +581,7 @@ The default paths remain `gmail_mcp/credentials.json` and `gmail_mcp/token.json`
 - Database must be shared with your integration
 - Open database → Click `...` → Add connections → Select JobSync
 
-**"OPENROUTER_API_KEY not found"**
+**"OPENROUTER_KEY not found"**
 
 - Key starts with `sk-or-v1-`
 - Make sure you have credits in your OpenRouter account
