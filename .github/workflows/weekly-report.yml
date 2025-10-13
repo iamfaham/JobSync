@@ -44,15 +44,15 @@ jobs:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
           NOTION_WEEKLY_REPORTS_DB_ID: ${{ secrets.NOTION_WEEKLY_REPORTS_DB_ID }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_KEY: ${{ secrets.OPENROUTER_KEY }}
           OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
         run: |
           cat > .env << EOF
           NOTION_TOKEN=${NOTION_TOKEN}
           NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
           NOTION_WEEKLY_REPORTS_DB_ID=${NOTION_WEEKLY_REPORTS_DB_ID}
-          OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-          OPENROUTER_MODEL=${OPENROUTER_MODEL:-anthropic/claude-3.5-sonnet}
+          OPENROUTER_KEY=${OPENROUTER_KEY}
+          OPENROUTER_MODEL=${OPENROUTER_MODEL:-mistralai/mistral-small-3.2-24b-instruct:free}
           EOF
 
       - name: Generate weekly report
