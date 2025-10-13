@@ -72,7 +72,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add agent/cache.json
+          git add -f agent/cache.json
           git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Update email cache [skip ci]"
 
       - name: Push changes
