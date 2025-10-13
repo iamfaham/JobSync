@@ -507,6 +507,64 @@ Should show:
 
 ---
 
+## ☁️ GitHub Actions Setup (Automation)
+
+Automate daily syncs and weekly reports in GitHub without storing credentials in the repo.
+
+### 1) Requirements (run locally once)
+
+- Run: `uv run agent/main.py` to generate `gmail_mcp/token.json`
+- Ensure `.gitignore` excludes: `.env`, `gmail_mcp/credentials.json`, `gmail_mcp/token.json`
+
+### 2) Add GitHub Secrets (paste raw values)
+
+Settings → Secrets and variables → Actions → New repository secret
+
+- `GMAIL_CREDENTIALS`: contents of `gmail_mcp/credentials.json`
+- `GMAIL_TOKEN`: contents of `gmail_mcp/token.json`
+- `NOTION_TOKEN`: from `.env`
+- `NOTION_DATABASE_ID`: from `.env`
+- `NOTION_WEEKLY_REPORTS_DB_ID`: from `.env`
+- `OPENROUTER_API_KEY`: from `.env`
+- Optional: `OPENROUTER_MODEL` (defaults to `anthropic/claude-3.5-sonnet`)
+
+### 3) Workflows (already included)
+
+Files:
+
+- `.github/workflows/daily-sync.yml` (runs 09:00 UTC daily)
+- `.github/workflows/weekly-report.yml` (runs Monday 10:00 UTC)
+
+They reconstruct files at runtime:
+
+```bash
+mkdir -p gmail_mcp
+echo "$GMAIL_CREDENTIALS" > gmail_mcp/credentials.json
+echo "$GMAIL_TOKEN" > gmail_mcp/token.json
+```
+
+And create `.env` from secrets for Notion/OpenRouter.
+
+### 4) Permissions
+
+Settings → Actions → General → Workflow permissions → Read and write
+
+### 5) Optional overrides
+
+You can change credential file locations using env vars:
+
+- `GMAIL_CREDENTIALS_PATH`
+- `GMAIL_TOKEN_PATH`
+
+The default paths remain `gmail_mcp/credentials.json` and `gmail_mcp/token.json`.
+
+### 6) Troubleshooting
+
+- Secret not found → check secret names
+- Invalid/expired token → re-run locally to regenerate `token.json`, update `GMAIL_TOKEN`
+- Notion errors → verify DB sharing and property names
+- Rate limits → add OpenRouter credits or use a cheaper model
+
 ## 🆘 Troubleshooting
 
 ### Environment Variables

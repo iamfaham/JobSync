@@ -11,6 +11,8 @@ wheels/
 
 # Environment variables
 .env
+.env.local
+.env.*.local
 
 # Gmail OAuth files
 gmail_mcp/token.json

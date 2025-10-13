@@ -228,9 +228,42 @@ The agent automatically handles OpenRouter rate limits:
 
 ## Scheduling
 
-### Daily Sync (Recommended)
+### 🚀 GitHub Actions (Recommended - Cloud-based)
 
-Run the daily sync every morning to process new job application emails:
+Automate everything with GitHub Actions - no need to keep your computer running!
+
+**✨ Features:**
+
+- ☁️ Runs in the cloud (free for public repos)
+- 📅 Daily sync + weekly reports
+- 🔄 Auto-refreshes OAuth tokens
+- 💾 Persists cache between runs
+- 📧 Email notifications on failures
+
+**Setup (GitHub Actions):**
+
+- Run once locally: `uv run agent/main.py` (creates `gmail_mcp/token.json`)
+- Add GitHub Secrets with raw JSON content (Settings → Secrets → Actions):
+  - `GMAIL_CREDENTIALS` = contents of `gmail_mcp/credentials.json`
+  - `GMAIL_TOKEN` = contents of `gmail_mcp/token.json`
+  - `NOTION_TOKEN`, `NOTION_DATABASE_ID`, `NOTION_WEEKLY_REPORTS_DB_ID`, `OPENROUTER_API_KEY`
+- Ensure workflow permissions: Settings → Actions → General → Read and write
+- Manually run each workflow once to verify
+
+See “GitHub Actions Setup” in `SETUP_ENV.md` for details.
+
+**Schedules:**
+
+- **Daily Sync**: Every day at 9:00 AM UTC
+- **Weekly Report**: Every Monday at 10:00 AM UTC
+
+---
+
+### 💻 Local Scheduling (Alternative)
+
+If you prefer running locally on your own machine:
+
+#### Daily Sync
 
 **Windows (Task Scheduler):**
 
@@ -245,9 +278,7 @@ crontab -e
 # Add: 0 9 * * * cd /path/to/JobSync && uv run agent/main.py
 ```
 
-### Weekly Reports (Optional)
-
-Generate a weekly summary every Monday morning:
+#### Weekly Reports
 
 **Windows (Task Scheduler):**
 
@@ -262,7 +293,7 @@ crontab -e
 # Add: 0 10 * * 1 cd /path/to/JobSync && uv run agent/weekly_report.py
 ```
 
-### Using schedule library
+#### Using Python schedule library
 
 ```python
 import schedule

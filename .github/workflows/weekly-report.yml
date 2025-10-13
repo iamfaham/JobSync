@@ -1,0 +1,61 @@
+name: Weekly Job Application Report
+
+on:
+  schedule:
+    # Run every Monday at 10:00 AM UTC
+    - cron: "0 10 * * 1"
+  workflow_dispatch: # Allow manual trigger with custom days
+    inputs:
+      days:
+        description: "Number of days to look back (default: 7)"
+        required: false
+        default: "7"
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Setup Gmail credentials
+        env:
+          GMAIL_CREDENTIALS: ${{ secrets.GMAIL_CREDENTIALS }}
+          GMAIL_TOKEN: ${{ secrets.GMAIL_TOKEN }}
+        run: |
+          mkdir -p gmail_mcp
+          echo "$GMAIL_CREDENTIALS" > gmail_mcp/credentials.json
+          echo "$GMAIL_TOKEN" > gmail_mcp/token.json
+
+      - name: Setup environment variables
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          NOTION_WEEKLY_REPORTS_DB_ID: ${{ secrets.NOTION_WEEKLY_REPORTS_DB_ID }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
+        run: |
+          cat > .env << EOF
+          NOTION_TOKEN=${NOTION_TOKEN}
+          NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
+          NOTION_WEEKLY_REPORTS_DB_ID=${NOTION_WEEKLY_REPORTS_DB_ID}
+          OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+          OPENROUTER_MODEL=${OPENROUTER_MODEL:-anthropic/claude-3.5-sonnet}
+          EOF
+
+      - name: Generate weekly report
+        run: |
+          DAYS="${{ github.event.inputs.days || '7' }}"
+          uv run agent/weekly_report.py $DAYS
