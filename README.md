@@ -41,10 +41,6 @@ JobSyncd/
 
 ### Data Flow
 
-```
-Gmail API → LangGraph Workflow → Notion API
-```
-
 - ✅ **MCP Architecture**: Modular, reusable services
 - ✅ **LangGraph Workflow**: Intelligent email processing with built-in deduplication
 - ✅ **Single LLM Call**: Processes all emails together for better context
@@ -79,7 +75,7 @@ This will:
 
 **On first run:** A browser will open for Gmail OAuth authentication. Grant permissions and the agent will save a `token.json` for future use.
 
-**⚠️ Prerequisites:**
+**Prerequisites:**
 
 - You need to download `credentials.json` from Google Cloud Console and place it in the `agent/` folder
 - See `SETUP_ENV.md` for detailed setup instructions
@@ -121,11 +117,11 @@ uv run agent/weekly_report.py 30  # Last 30 days (monthly report)
 
 ## Scheduling
 
-### 🚀 GitHub Actions (Recommended - Cloud-based)
+### GitHub Actions (Recommended - Cloud-based)
 
 Automate everything with GitHub Actions - no need to keep your computer running!
 
-**✨ Features:**
+**Features:**
 
 - ☁️ Runs in the cloud (free for public repos)
 - 📅 Daily sync + weekly reports
@@ -152,7 +148,7 @@ See “GitHub Actions Setup” in `SETUP_ENV.md` for details.
 
 ---
 
-### 💻 Local Scheduling (Alternative)
+### Local Scheduling (Alternative)
 
 If you prefer running locally on your own machine:
 
@@ -202,7 +198,3 @@ while True:
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

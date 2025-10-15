@@ -5,7 +5,7 @@
 1. **Create `.env` file** in the project root:
 
    ```bash
-   cp .env.template .env
+   cp .env.example .env
    ```
 
    Or create manually
@@ -37,7 +37,7 @@ NOTION_TOKEN=secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ---
 
-### 2. NOTION_DATABASE_ID
+### 2a. NOTION_DATABASE_ID
 
 **What it is:** The ID of your Notion job tracker database (Job Applications)
 
@@ -65,7 +65,7 @@ NOTION_TOKEN=secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 - Copy ID from URL:
   ```
   https://www.notion.so/YOUR_DATABASE_ID?v=...
-                        ^^^^^^^^^^^^^^^^^^
+                        ^^^^^^^^^^^^^^^^^
   ```
 
 **Add to `.env`:**
@@ -110,7 +110,7 @@ NOTION_WEEKLY_REPORTS_DB_ID=1234567890abcdef1234567890abcdef
 
 ### 3. OPENROUTER_KEY
 
-**What it is:** API key for OpenRouter (provides access to Claude/GPT models)
+**What it is:** API key for OpenRouter (provides access to LLMs)
 
 **How to get it:**
 
@@ -119,7 +119,8 @@ NOTION_WEEKLY_REPORTS_DB_ID=1234567890abcdef1234567890abcdef
 3. Click your profile → **Keys**
 4. Click **Create Key**
 5. Copy the key
-6. **Add credits:** Go to **Credits** → Add $5-10 (plenty for testing)
+6. [Optional]**Add credits:** Go to **Credits** → Add $5-10 (plenty for testing)
+   > **Note:** Step 6 is optional because you can use free available models from OpenRouter.
 
 **Add to `.env`:**
 
@@ -129,22 +130,16 @@ OPENROUTER_KEY=sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ---
 
-### 4. OPENROUTER_MODEL (Optional)
+### 4. OPENROUTER_MODEL
 
 **What it is:** Which AI model to use for parsing emails
 
-**Default:** `anthropic/claude-3.5-sonnet` (best quality)
-
-**Alternatives:**
-
-- `anthropic/claude-3-haiku` (faster, cheaper)
-- `openai/gpt-4o-mini` (cheaper)
-- `openai/gpt-4o` (high quality)
+**Default:** `mistralai/mistral-small-3.2-24b-instruct:free` (free model with good quality)
 
 **Add to `.env`:**
 
 ```env
-OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
+OPENROUTER_MODEL=mistralai/mistral-small-3.2-24b-instruct:free
 ```
 
 ---
@@ -178,7 +173,7 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
    - **Developer contact:** Your email
 4. Click **Save and Continue**
 5. **Scopes:** Skip this (click Save and Continue)
-6. **Test users: Audience → ** Click **+ Add Users** → Add your Gmail address
+6. **Test users**: Audience → Add Users → Add your Gmail address
    - ⚠️ **CRITICAL:** If app is in "Testing" mode, ONLY test users can access it
    - Add the exact Gmail account you want to read emails from
 7. Click **Save and Continue** → **Back to Dashboard**
@@ -191,7 +186,7 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
    - ⚠️ **IMPORTANT:** Must be "Desktop app" for `http://localhost` to work
 4. **Name:** JobSyncd Desktop
 5. Click **Create**
-6. Click **Download JSON** (or click the download icon ⬇️ in credentials list)
+6. Click **Download JSON** (or click the download icon ⬇️ in credentials list).
 
 #### Step 5: Save credentials.json
 
@@ -234,11 +229,6 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 - ✅ **Fix:** Add your Gmail account as a Test User in OAuth consent screen
 - Go to OAuth consent screen → Test users → Add your email
 
-**Error: "[WinError 10013] Port already in use"**
-
-- ✅ **Fix:** The code automatically tries multiple ports (8080, 49256, 8000)
-- If all fail, it switches to manual authentication (copy/paste code)
-
 **Error: "credentials.json not found"**
 
 - ✅ **Fix:** Make sure `credentials.json` is in the `agent/` folder
@@ -265,22 +255,11 @@ agent/
 
 ## 📝 Complete .env Example
 
-```env
-# Notion Configuration
-NOTION_TOKEN=secret_abc123xyz789
-NOTION_DATABASE_ID=1234567890abcdef1234567890abcdef
-NOTION_WEEKLY_REPORTS_DB_ID=abcdef1234567890abcdef1234567890
-
-# OpenRouter LLM Configuration
-OPENROUTER_KEY=sk-or-v1-xxxxxxxxxxxx
-OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
-
-# Gmail OAuth (handled separately - credentials.json in agent/)
-```
+See the .env.example [`.env.example`](./.env.example) file included in the repository for the most up-to-date example environment variables and formatting. Make sure your `.env` file matches the structure and keys found there.
 
 ---
 
-## 📊 Weekly Report Agent Setup (Optional)
+## 📊 Weekly Report Agent Setup
 
 The Weekly Report Agent automatically generates AI-powered summaries of your job application activity.
 
@@ -429,7 +408,7 @@ uv run agent/notion_utils.py
 
 Should show: `[OK] Connected to Notion DB: [Your Database Name]`
 
-### 3. Test LLM (optional):
+### 3. Test LLM:
 
 ```python
 from agent.llm_utils import llm
@@ -495,7 +474,7 @@ Should show:
 - ✅ `credentials.json` - Client ID/secret (safe to share with team, but keep private)
 - ❌ `token.json` - YOUR personal Gmail access token (NEVER commit or share)
 - ❌ `.env` - Contains API keys (NEVER commit)
-- Both are automatically excluded via `.gitignore`
+- All are automatically excluded via `.gitignore`
 
 ### What's Safe to Share
 
@@ -607,12 +586,6 @@ The default paths remain `agent/credentials.json` and `agent/token.json`.
 - Delete the credential and create a new one as **Desktop app**
 - Desktop apps automatically support `http://localhost`
 
-**"Port already in use" / "[WinError 10013]"**
-
-- The code tries multiple ports automatically (8080, 49256, 8000)
-- If all fail, it falls back to manual authentication
-- Copy the URL, paste in browser, copy the code back
-
 **"Browser doesn't open" on first run**
 
 - Copy the URL from console and paste in your browser manually
@@ -629,17 +602,13 @@ The default paths remain `agent/credentials.json` and `agent/token.json`.
 
 **"Module not found" errors**
 
-- Run `uv sync` to install dependencies
+- Run `uv sync` or `pip install -r requirements.txt` to install dependencies
 - Make sure you're in the project directory
-
-**"No module named 'dotenv'"**
-
-- Run `uv sync` or `pip install python-dotenv`
 
 **Rate limit errors from OpenRouter**
 
 - The code automatically retries with 10s, 20s, 30s delays
-- If it persists, add more credits to your OpenRouter account
+- If it persists, add more credits to your OpenRouter account (OpenRouter has not-so-good rate limits for free models)
 - Or wait a few minutes and try again
 
 ---
