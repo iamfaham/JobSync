@@ -33,9 +33,9 @@ jobs:
           GMAIL_CREDENTIALS: ${{ secrets.GMAIL_CREDENTIALS }}
           GMAIL_TOKEN: ${{ secrets.GMAIL_TOKEN }}
         run: |
-          mkdir -p gmail_mcp
-          echo "$GMAIL_CREDENTIALS" > gmail_mcp/credentials.json
-          echo "$GMAIL_TOKEN" > gmail_mcp/token.json
+          mkdir -p agent
+          echo "$GMAIL_CREDENTIALS" > agent/credentials.json
+          echo "$GMAIL_TOKEN" > agent/token.json
 
       - name: Setup environment variables
         env:
@@ -51,29 +51,13 @@ jobs:
           OPENROUTER_MODEL=${OPENROUTER_MODEL:-mistralai/mistral-small-3.2-24b-instruct:free}
           EOF
 
-      - name: Load cache
-        uses: actions/cache@v4
-        with:
-          path: agent/cache.json
-          key: email-cache-${{ github.run_id }}
-          restore-keys: |
-            email-cache-
-
       - name: Run daily sync
         run: uv run agent/main.py
-
-      - name: Upload cache artifact
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: email-cache
-          path: agent/cache.json
-          retention-days: 30
 
       - name: Update Gmail token (if refreshed)
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: gmail-token
-          path: gmail_mcp/token.json
+          path: agent/token.json
           retention-days: 90

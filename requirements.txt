@@ -19,3 +19,11 @@ notion-client>=2.5.0
 # Environment variable management
 python-dotenv>=1.0.0
 
+# LangGraph
+langgraph>=0.6.10
+
+# Pydantic
+pydantic>=2.12.0
+
+# HTTPX
+httpx>=0.28.1

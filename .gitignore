@@ -15,8 +15,8 @@ wheels/
 .env.*.local
 
 # Gmail OAuth files
-gmail_mcp/token.json
-gmail_mcp/credentials.json
+agent/token.json
+agent/credentials.json
 
 # Cache file
 agent/cache.json

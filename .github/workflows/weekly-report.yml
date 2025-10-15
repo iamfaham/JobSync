@@ -37,9 +37,9 @@ jobs:
           GMAIL_CREDENTIALS: ${{ secrets.GMAIL_CREDENTIALS }}
           GMAIL_TOKEN: ${{ secrets.GMAIL_TOKEN }}
         run: |
-          mkdir -p gmail_mcp
-          echo "$GMAIL_CREDENTIALS" > gmail_mcp/credentials.json
-          echo "$GMAIL_TOKEN" > gmail_mcp/token.json
+          mkdir -p agent
+          echo "$GMAIL_CREDENTIALS" > agent/credentials.json
+          echo "$GMAIL_TOKEN" > agent/token.json
 
       - name: Setup environment variables
         env:

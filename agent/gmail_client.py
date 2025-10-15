@@ -34,7 +34,7 @@ def _creds():
             if not os.path.exists(cred_path):
                 raise FileNotFoundError(
                     f"credentials.json not found at {cred_path}. "
-                    "Please download it from Google Cloud Console and place it in the gmail_mcp directory."
+                    "Please download it from Google Cloud Console and place it in the agent directory."
                 )
             flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
 

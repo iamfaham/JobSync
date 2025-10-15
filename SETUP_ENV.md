@@ -196,10 +196,10 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 #### Step 5: Save credentials.json
 
 1. Rename downloaded file to `credentials.json`
-2. Move it to `gmail_mcp/` folder in your project:
+2. Move it to `agent/` folder in your project:
    ```
    JobSync/
-   ├── gmail_mcp/
+   ├── agent/
    │   ├── credentials.json  ← PUT IT HERE
    │   └── gmail_client.py
    ```
@@ -220,7 +220,7 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
    - Click **Advanced**
    - Click **Go to JobSync (unsafe)** ← This is YOUR app, it's safe
 6. **Success!** You'll see "The authentication flow has completed"
-7. A `token.json` file is created in `gmail_mcp/` folder (keeps you logged in)
+7. A `token.json` file is created in `agent/` folder (keeps you logged in)
 
 #### Common Gmail OAuth Errors
 
@@ -241,15 +241,15 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 
 **Error: "credentials.json not found"**
 
-- ✅ **Fix:** Make sure `credentials.json` is in the `gmail_mcp/` folder
+- ✅ **Fix:** Make sure `credentials.json` is in the `agent/` folder
 - Check the file name (no extra .txt extension)
 
 #### Gmail OAuth Files Structure
 
-After setup, your `gmail_mcp/` folder should have:
+After setup, your `agent/` folder should have:
 
 ```
-gmail_mcp/
+agent/
 ├── credentials.json  ← You download this (OAuth client secrets)
 ├── token.json        ← Auto-created after first login (keeps you logged in)
 └── gmail_client.py   ← Code that uses the credentials
@@ -275,7 +275,7 @@ NOTION_WEEKLY_REPORTS_DB_ID=abcdef1234567890abcdef1234567890
 OPENROUTER_KEY=sk-or-v1-xxxxxxxxxxxx
 OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 
-# Gmail OAuth (handled separately - credentials.json in gmail_mcp/)
+# Gmail OAuth (handled separately - credentials.json in agent/)
 ```
 
 ---
@@ -412,7 +412,7 @@ After setting up all components, test each one:
 
 ```bash
 cd D:\Projects\JobSync
-uv run python -c "from gmail_mcp.gmail_client import list_messages; print('Gmail:', len(list_messages()), 'messages')"
+uv run python -c "from agent.gmail_client import list_messages; print('Gmail:', len(list_messages()), 'messages')"
 ```
 
 Should show: `Gmail: [number] messages`
@@ -513,15 +513,15 @@ Automate daily syncs and weekly reports in GitHub without storing credentials in
 
 ### 1) Requirements (run locally once)
 
-- Run: `uv run agent/main.py` to generate `gmail_mcp/token.json`
-- Ensure `.gitignore` excludes: `.env`, `gmail_mcp/credentials.json`, `gmail_mcp/token.json`
+- Run: `uv run agent/main.py` to generate `agent/token.json`
+- Ensure `.gitignore` excludes: `.env`, `agent/credentials.json`, `agent/token.json`
 
 ### 2) Add GitHub Secrets (paste raw values)
 
 Settings → Secrets and variables → Actions → New repository secret
 
-- `GMAIL_CREDENTIALS`: contents of `gmail_mcp/credentials.json`
-- `GMAIL_TOKEN`: contents of `gmail_mcp/token.json`
+- `GMAIL_CREDENTIALS`: contents of `agent/credentials.json`
+- `GMAIL_TOKEN`: contents of `agent/token.json`
 - `NOTION_TOKEN`: from `.env`
 - `NOTION_DATABASE_ID`: from `.env`
 - `NOTION_WEEKLY_REPORTS_DB_ID`: from `.env`
@@ -538,9 +538,9 @@ Files:
 They reconstruct files at runtime:
 
 ```bash
-mkdir -p gmail_mcp
-echo "$GMAIL_CREDENTIALS" > gmail_mcp/credentials.json
-echo "$GMAIL_TOKEN" > gmail_mcp/token.json
+mkdir -p agent
+echo "$GMAIL_CREDENTIALS" > agent/credentials.json
+echo "$GMAIL_TOKEN" > agent/token.json
 ```
 
 And create `.env` from secrets for Notion/OpenRouter.
@@ -556,7 +556,7 @@ You can change credential file locations using env vars:
 - `GMAIL_CREDENTIALS_PATH`
 - `GMAIL_TOKEN_PATH`
 
-The default paths remain `gmail_mcp/credentials.json` and `gmail_mcp/token.json`.
+The default paths remain `agent/credentials.json` and `agent/token.json`.
 
 ### 6) Troubleshooting
 
@@ -593,7 +593,7 @@ The default paths remain `gmail_mcp/credentials.json` and `gmail_mcp/token.json`
 
 1. Download OAuth credentials from Google Cloud Console
 2. Rename to `credentials.json` (exactly)
-3. Place in `gmail_mcp/` folder (not root folder)
+3. Place in `agent/` folder (not root folder)
 
 **"Error 403: access_denied"**
 
@@ -621,7 +621,7 @@ The default paths remain `gmail_mcp/credentials.json` and `gmail_mcp/token.json`
 
 **"The authentication flow has completed" but still fails**
 
-- Check if `token.json` was created in `gmail_mcp/` folder
+- Check if `token.json` was created in `agent/` folder
 - If not, you may need to run as administrator
 - Or manually copy the auth code from the URL
 

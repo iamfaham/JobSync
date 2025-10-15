@@ -18,16 +18,17 @@ Automatically track job applications from Gmail to Notion using AI-powered email
 
 ```
 JobSync/
-├── gmail_mcp/             # Gmail API integration
-│   ├── gmail_client.py    # Gmail API client
-│   └── token.json         # OAuth token (auto-generated)
+├── mcp_servers/           # MCP servers for external services
+│   ├── gmail_server.py    # Gmail MCP server
+│   └── notion_server.py   # Notion MCP server
+├── workflows/             # LangGraph workflows
+│   └── job_sync_workflow.py # Main job sync workflow
 ├── agent/                 # Main automation agents
-│   ├── gmail_connector.py # Fetches emails from Gmail
-│   ├── notion_utils.py    # Notion database operations (REST API)
-│   ├── llm_utils.py       # LLM email parsing
-│   ├── cache_utils.py     # Prevents duplicate processing
-│   ├── cache.json         # Cache of processed emails
-│   ├── main.py            # Daily sync orchestrator
+│   ├── gmail_client.py    # Gmail API client
+│   ├── credentials.json   # Gmail OAuth credentials (download from Google Cloud Console)
+│   ├── token.json         # OAuth token (auto-generated)
+│   ├── notion_utils.py    # Notion database operations
+│   ├── main.py            # Daily sync orchestrator (MCP + LangGraph)
 │   └── weekly_report.py   # Weekly summary generator
 ├── pyproject.toml         # Project configuration
 ├── requirements.txt       # Python dependencies
@@ -39,15 +40,29 @@ JobSync/
 ### Data Flow
 
 ```
-Gmail API → Python Agent (with LLM) → Notion REST API
+Gmail API → LangGraph Workflow → Notion API
 ```
 
-- ✅ Simple and direct
-- ✅ Perfect for automated scripts
-- ✅ No extra servers needed
-- ✅ Runs as scheduled task (daily/weekly)
+- ✅ **MCP Architecture**: Modular, reusable services
+- ✅ **LangGraph Workflow**: Intelligent email processing with built-in deduplication
+- ✅ **Single LLM Call**: Processes all emails together for better context
+- ✅ **Smart Deduplication**: LLM naturally understands email relationships
+- ✅ **Extensible**: Easy to add new services and workflows
 
 ## Setup
+
+### 0. Prerequisites
+
+**⚠️ IMPORTANT:** Before running JobSync, you need to download Gmail OAuth credentials:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Gmail API
+4. Create OAuth 2.0 credentials
+5. Download the JSON file and rename it to `credentials.json`
+6. Place it in the `agent/` folder
+
+See `SETUP_ENV.md` for detailed step-by-step instructions.
 
 ### 1. Install Dependencies
 
@@ -66,7 +81,7 @@ Quick setup:
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Enable **Gmail API**
 3. Create OAuth 2.0 Client ID → Choose **Desktop app**
-4. Download JSON → Save as `gmail_mcp/credentials.json`
+4. Download JSON → Save as `agent/credentials.json`
 5. Done! (Desktop app allows `http://localhost` automatically)
 
 **📖 Detailed setup guide:** See [`SETUP_ENV.md`](./SETUP_ENV.md)
@@ -126,7 +141,7 @@ NOTION_WEEKLY_REPORTS_DB_ID=your_weekly_reports_database_id
 OPENROUTER_KEY=your_openrouter_api_key
 OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 
-# Gmail OAuth (credentials.json required in gmail_mcp/)
+# Gmail OAuth (credentials.json required in agent/)
 ```
 
 **To get database IDs:**
@@ -152,11 +167,23 @@ uv run agent/main.py
 This will:
 
 1. Fetch recent emails (last 10 emails by default)
-2. Parse them with AI to extract job application info
-3. Create entries in your Notion database
-4. Cache processed emails to avoid duplicates
+2. Process all emails together with AI for intelligent deduplication
+3. Extract job application info with built-in duplicate detection
+4. Create entries in your Notion database
+5. Handle status updates automatically
 
 **On first run:** A browser will open for Gmail OAuth authentication. Grant permissions and the agent will save a `token.json` for future use.
+
+**⚠️ Prerequisites:**
+
+- You need to download `credentials.json` from Google Cloud Console and place it in the `agent/` folder
+- See `SETUP_ENV.md` for detailed setup instructions
+
+**Key improvements:**
+
+- **Smart Deduplication**: LLM processes all emails together, naturally identifying related emails
+- **Status Progression**: Automatically handles Applied → Assessment → Interview → Offer flows
+- **No Duplicates**: Same company emails are merged into single applications
 
 ### Generate Weekly Report
 
@@ -166,19 +193,32 @@ This will:
 uv run agent/weekly_report.py
 ```
 
-This will:
+## Troubleshooting
 
-1. Fetch all applications from the last 7 days
-2. Aggregate statistics (applications, interviews, offers, rejections)
-3. Detect deadlines and action items from notes
-4. Generate AI-powered 5-bullet summary with insights
-5. Create a new page in your "Weekly Reports" Notion database
+### "credentials.json not found" Error
 
-**Custom time range:**
+If you see this error:
+
+```
+credentials.json not found at agent/credentials.json
+```
+
+**Solution:**
+
+1. Download OAuth credentials from Google Cloud Console
+2. Rename the file to `credentials.json`
+3. Place it in the `agent/` folder
+4. Run the command again
+
+### "ModuleNotFoundError" Errors
+
+If you see import errors:
 
 ```bash
-uv run agent/weekly_report.py 14  # Last 14 days
-uv run agent/weekly_report.py 30  # Last 30 days (monthly report)
+# Clear Python cache
+uv run python -c "import sys; print('Python path:', sys.path)"
+# Or reinstall dependencies
+uv sync
 ```
 
 ## Troubleshooting
@@ -203,29 +243,6 @@ If you see redirect URI errors:
 - The model will try to extract: company, job_title, status, application_date
 - If parsing fails, it skips that email (check console output)
 
-### Rate Limit Handling
-
-The agent automatically handles OpenRouter rate limits:
-
-- **Automatic Retry**: Detects 429 errors and retries with backoff
-- **Retry Schedule**: 10s → 20s → 30s delays between attempts
-- **Max Attempts**: 3 retries before skipping the email
-- **Console Output**: Shows `[RATE LIMIT]` messages during retries
-
-**Example output:**
-
-```
-[RATE LIMIT] Attempt 1/3 failed. Retrying in 10s...
-[RATE LIMIT] Attempt 2/3 failed. Retrying in 20s...
-[OK] Application found: Amazon - SDE
-```
-
-**Tips to avoid rate limits:**
-
-- Use a paid OpenRouter key for higher limits
-- Process emails in smaller batches (adjust `max_results` in `main.py`)
-- Run during off-peak hours
-
 ## Scheduling
 
 ### 🚀 GitHub Actions (Recommended - Cloud-based)
@@ -242,10 +259,10 @@ Automate everything with GitHub Actions - no need to keep your computer running!
 
 **Setup (GitHub Actions):**
 
-- Run once locally: `uv run agent/main.py` (creates `gmail_mcp/token.json`)
+- Run once locally: `uv run agent/main.py` (creates `agent/token.json`)
 - Add GitHub Secrets with raw JSON content (Settings → Secrets → Actions):
-  - `GMAIL_CREDENTIALS` = contents of `gmail_mcp/credentials.json`
-  - `GMAIL_TOKEN` = contents of `gmail_mcp/token.json`
+  - `GMAIL_CREDENTIALS` = contents of `agent/credentials.json`
+  - `GMAIL_TOKEN` = contents of `agent/token.json`
   - `NOTION_TOKEN`, `NOTION_DATABASE_ID`, `NOTION_WEEKLY_REPORTS_DB_ID`, `OPENROUTER_KEY`
 - Ensure workflow permissions: Settings → Actions → General → Read and write
 - Manually run each workflow once to verify
