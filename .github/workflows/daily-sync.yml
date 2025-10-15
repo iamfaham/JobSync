@@ -27,12 +27,15 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      # Note: Artifact download is disabled for first run
+      # After first successful run, change 'if: false' to 'if: true' to enable token persistence
       - name: Download previous Gmail token (if exists)
         uses: actions/download-artifact@v4
         with:
           name: gmail-token
           path: agent/
         continue-on-error: true
+        if: false # Change to 'if: true' after first successful run
 
       - name: Setup Gmail credentials
         env:
@@ -41,10 +44,9 @@ jobs:
         run: |
           mkdir -p agent
           echo "$GMAIL_CREDENTIALS" > agent/credentials.json
-          # Only overwrite token if it doesn't exist (preserve downloaded token)
-          if [ ! -f agent/token.json ]; then
-            echo "$GMAIL_TOKEN" > agent/token.json
-          fi
+          # Always use the token from secrets for now (artifact download is disabled)
+          # After enabling artifact download, this will only run if no token exists
+          echo "$GMAIL_TOKEN" > agent/token.json
 
       - name: Setup environment variables
         env:
