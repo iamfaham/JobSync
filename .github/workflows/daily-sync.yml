@@ -6,11 +6,10 @@ on:
     - cron: "0 9 * * *"
   workflow_dispatch: # Allow manual trigger
 
-permissions:
-  contents: write
-
 jobs:
   sync:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
 
     steps:
@@ -28,6 +27,13 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Download previous Gmail token (if exists)
+        uses: actions/download-artifact@v4
+        with:
+          name: gmail-token
+          path: agent/
+        continue-on-error: true
+
       - name: Setup Gmail credentials
         env:
           GMAIL_CREDENTIALS: ${{ secrets.GMAIL_CREDENTIALS }}
@@ -35,7 +41,10 @@ jobs:
         run: |
           mkdir -p agent
           echo "$GMAIL_CREDENTIALS" > agent/credentials.json
-          echo "$GMAIL_TOKEN" > agent/token.json
+          # Only overwrite token if it doesn't exist (preserve downloaded token)
+          if [ ! -f agent/token.json ]; then
+            echo "$GMAIL_TOKEN" > agent/token.json
+          fi
 
       - name: Setup environment variables
         env:

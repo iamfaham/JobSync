@@ -20,9 +20,11 @@ Automatically track job applications from Gmail to Notion using AI-powered email
 JobSync/
 ├── mcp_servers/           # MCP servers for external services
 │   ├── gmail_server.py    # Gmail MCP server
-│   └── notion_server.py   # Notion MCP server
+│   ├── notion_server.py   # Notion MCP server
+│   └── weekly_report_server.py # Weekly report MCP server
 ├── workflows/             # LangGraph workflows
-│   └── job_sync_workflow.py # Main job sync workflow
+│   ├── job_sync_workflow.py # Main job sync workflow
+│   └── weekly_report_workflow.py # Weekly report workflow
 ├── agent/                 # Main automation agents
 │   ├── gmail_client.py    # Gmail API client
 │   ├── credentials.json   # Gmail OAuth credentials (download from Google Cloud Console)
@@ -192,6 +194,27 @@ This will:
 ```bash
 uv run agent/weekly_report.py
 ```
+
+This will:
+
+1. Fetch application data from the last 7 days using MCP + LangGraph
+2. Generate AI-powered summary with intelligent insights
+3. Create a formatted report in your Notion database
+4. Handle rate limits and errors gracefully
+
+**Custom time range:**
+
+```bash
+uv run agent/weekly_report.py 14  # Last 14 days
+uv run agent/weekly_report.py 30  # Last 30 days (monthly report)
+```
+
+**Key improvements:**
+
+- **MCP Architecture**: Modular, reusable weekly report services
+- **LangGraph Workflow**: Intelligent data processing and summary generation
+- **Smart Insights**: AI analyzes patterns and provides actionable recommendations
+- **Flexible Timeframes**: Support for custom date ranges
 
 ## Troubleshooting
 
