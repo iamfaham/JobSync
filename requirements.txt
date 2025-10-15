@@ -1,4 +1,4 @@
-# JobSync - Job Application Tracker
+# JobSyncd - Job Application Tracker
 # Python 3.13+ required
 
 # Google APIs (Gmail integration)

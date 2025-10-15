@@ -10,7 +10,7 @@ from workflows.job_sync_workflow import JobSyncWorkflow
 
 async def daily_sync():
     """Main entry point for JobSync using MCP + LangGraph workflow"""
-    print("🚀 Starting JobSync with MCP + LangGraph...")
+    print("🚀 Starting JobSyncd with MCP + LangGraph...")
 
     workflow = JobSyncWorkflow()
     result = await workflow.run()

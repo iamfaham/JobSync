@@ -1,4 +1,4 @@
-# JobSync
+# JobSyncd
 
 AI-powered, intelligent automation for job application tracking using LLMs and MCPs.
 
@@ -17,7 +17,7 @@ AI-powered, intelligent automation for job application tracking using LLMs and M
 ### Project Structure
 
 ```
-JobSync/
+JobSyncd/
 ├── mcp_servers/           # MCP servers for external services
 │   ├── gmail_server.py    # Gmail MCP server
 │   ├── notion_server.py   # Notion MCP server
@@ -161,14 +161,14 @@ If you prefer running locally on your own machine:
 **Windows (Task Scheduler):**
 
 ```powershell
-schtasks /create /tn "JobSync-Daily" /tr "uv run D:\Projects\JobSync\agent\main.py" /sc daily /st 09:00
+schtasks /create /tn "JobSyncd-Daily" /tr "uv run D:\Projects\JobSyncd\agent\main.py" /sc daily /st 09:00
 ```
 
 **Linux/Mac (Cron):**
 
 ```bash
 crontab -e
-# Add: 0 9 * * * cd /path/to/JobSync && uv run agent/main.py
+# Add: 0 9 * * * cd /path/to/JobSyncd && uv run agent/main.py
 ```
 
 #### Weekly Reports
@@ -176,14 +176,14 @@ crontab -e
 **Windows (Task Scheduler):**
 
 ```powershell
-schtasks /create /tn "JobSync-Weekly" /tr "uv run D:\Projects\JobSync\agent\weekly_report.py" /sc weekly /d MON /st 10:00
+schtasks /create /tn "JobSyncd-Weekly" /tr "uv run D:\Projects\JobSyncd\agent\weekly_report.py" /sc weekly /d MON /st 10:00
 ```
 
 **Linux/Mac (Cron):**
 
 ```bash
 crontab -e
-# Add: 0 10 * * 1 cd /path/to/JobSync && uv run agent/weekly_report.py
+# Add: 0 10 * * 1 cd /path/to/JobSyncd && uv run agent/weekly_report.py
 ```
 
 #### Using Python schedule library
