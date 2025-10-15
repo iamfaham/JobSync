@@ -1,6 +1,6 @@
 # JobSync
 
-Automatically track job applications from Gmail to Notion using AI-powered email parsing.
+AI-powered, intelligent automation for job application tracking using LLMs and MCPs.
 
 ## Features
 
@@ -53,104 +53,7 @@ Gmail API → LangGraph Workflow → Notion API
 
 ## Setup
 
-### 0. Prerequisites
-
-**⚠️ IMPORTANT:** Before running JobSync, you need to download Gmail OAuth credentials:
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing one
-3. Enable Gmail API
-4. Create OAuth 2.0 credentials
-5. Download the JSON file and rename it to `credentials.json`
-6. Place it in the `agent/` folder
-
-See `SETUP_ENV.md` for detailed step-by-step instructions.
-
-### 1. Install Dependencies
-
-```bash
-uv sync
-# or
-pip install -r requirements.txt
-```
-
-### 2. Configure Gmail API
-
-**⚠️ IMPORTANT:** Use **Desktop app** OAuth client type (not Web application)!
-
-Quick setup:
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable **Gmail API**
-3. Create OAuth 2.0 Client ID → Choose **Desktop app**
-4. Download JSON → Save as `agent/credentials.json`
-5. Done! (Desktop app allows `http://localhost` automatically)
-
-**📖 Detailed setup guide:** See [`SETUP_ENV.md`](./SETUP_ENV.md)
-
-**Common errors:**
-
-- `redirect_uri_mismatch` → You created Web app instead of Desktop app
-- `Error 403: access_denied` → Add your email as a test user in OAuth consent screen
-
-### 3. Configure Notion
-
-1. Go to [Notion Integrations](https://www.notion.so/my-integrations)
-2. Click **+ New integration**
-3. Give it a name (e.g., "JobSync")
-4. Copy the **Internal Integration Token**
-
-**Create two databases:**
-
-**Database 1: Job Applications**
-
-- **Title** (Title) - Auto-generated from company + job title
-- **Company** (Text)
-- **Job Title** (Text)
-- **Status** (Select: Applied, Interview, Offer, Rejected, Assessment)
-- **Applied On** (Date)
-- **Notes** (Text)
-- **Application ID** (Text) - Optional, for tracking reference numbers
-
-**Database 2: Weekly Reports**
-
-- **Name** (Title) - Report title
-- **Week Range** (Text) - Date range (e.g., "Oct 5 – Oct 12")
-- **Summary** (Text) - AI-generated markdown summary
-- **Created On** (Date) - Report creation date
-
-5. Share both databases with your integration:
-   - Click **...** on each database → **Add connections**
-   - Select your integration
-
-### 4. Configure LLM (OpenRouter)
-
-1. Go to [OpenRouter](https://openrouter.ai/)
-2. Create an account and get an API key
-3. Add credits to your account
-
-### 5. Set Environment Variables
-
-Create a `.env` file in the project root:
-
-```env
-# Notion Configuration
-NOTION_TOKEN=your_notion_integration_token
-NOTION_DATABASE_ID=your_job_applications_database_id
-NOTION_WEEKLY_REPORTS_DB_ID=your_weekly_reports_database_id
-
-# OpenRouter LLM Configuration
-OPENROUTER_KEY=your_openrouter_api_key
-OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
-
-# Gmail OAuth (credentials.json required in agent/)
-```
-
-**To get database IDs:**
-
-1. Open each database as a full page in Notion
-2. Copy the ID from the URL: `https://www.notion.so/YOUR_DATABASE_ID?v=...`
-3. The database ID is the 32-character string (no dashes)
+See [`SETUP_ENV.md`](./SETUP_ENV.md) for complete setup instructions including Gmail API, Notion configuration, and environment variables.
 
 ## Usage
 
