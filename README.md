@@ -119,56 +119,6 @@ uv run agent/weekly_report.py 30  # Last 30 days (monthly report)
 - **Smart Insights**: AI analyzes patterns and provides actionable recommendations
 - **Flexible Timeframes**: Support for custom date ranges
 
-## Troubleshooting
-
-### "credentials.json not found" Error
-
-If you see this error:
-
-```
-credentials.json not found at agent/credentials.json
-```
-
-**Solution:**
-
-1. Download OAuth credentials from Google Cloud Console
-2. Rename the file to `credentials.json`
-3. Place it in the `agent/` folder
-4. Run the command again
-
-### "ModuleNotFoundError" Errors
-
-If you see import errors:
-
-```bash
-# Clear Python cache
-uv run python -c "import sys; print('Python path:', sys.path)"
-# Or reinstall dependencies
-uv sync
-```
-
-## Troubleshooting
-
-### Gmail OAuth Errors
-
-If you see redirect URI errors:
-
-- Make sure all redirect URIs are added in Google Cloud Console
-- The code will try multiple ports and fallback to manual auth if needed
-- Just follow the console prompts
-
-### Notion API Errors
-
-- Verify your integration token is correct
-- Make sure the database is shared with your integration
-- Check that property names match exactly (case-sensitive)
-
-### LLM Parsing Errors
-
-- Make sure OpenRouter API key has credits
-- The model will try to extract: company, job_title, status, application_date
-- If parsing fails, it skips that email (check console output)
-
 ## Scheduling
 
 ### 🚀 GitHub Actions (Recommended - Cloud-based)
@@ -249,6 +199,10 @@ while True:
     time.sleep(3600)
 ```
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
