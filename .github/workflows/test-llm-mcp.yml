@@ -2,76 +2,76 @@ name: Test LLM + MCP Direct Tools
 
 on:
   push:
-    branches: [ feature/llm-mcp-direct-tools ]
+    branches: [feature/llm-mcp-direct-tools]
   pull_request:
-    branches: [ feature/llm-mcp-direct-tools ]
+    branches: [feature/llm-mcp-direct-tools]
   workflow_dispatch:
     inputs:
       test_mode:
-        description: 'Test mode (dry-run or full)'
+        description: "Test mode (dry-run or full)"
         required: true
-        default: 'dry-run'
+        default: "dry-run"
         type: choice
         options:
-        - dry-run
-        - full
+          - dry-run
+          - full
 
 jobs:
   test-llm-mcp:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-        
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
-      with:
-        version: "latest"
-        
-    - name: Install dependencies
-      run: uv sync
-      
-    - name: Set up environment variables
-      run: |
-        echo "OPENROUTER_KEY=${{ secrets.OPENROUTER_KEY }}" >> .env
-        echo "NOTION_TOKEN=${{ secrets.NOTION_TOKEN }}" >> .env
-        echo "NOTION_DATABASE_ID=${{ secrets.NOTION_DATABASE_ID }}" >> .env
-        echo "NOTION_WEEKLY_REPORTS_DB_ID=${{ secrets.NOTION_WEEKLY_REPORTS_DB_ID }}" >> .env
-        echo "OPENROUTER_MODEL=anthropic/claude-3.5-sonnet" >> .env
-        
-    - name: Set up Gmail credentials
-      run: |
-        echo '${{ secrets.GMAIL_CREDENTIALS }}' > agent/credentials.json
-        echo '${{ secrets.GMAIL_TOKEN }}' > agent/token.json
-        
-    - name: Test LLM + MCP Workflow
-      run: |
-        echo "🚀 Testing LLM + MCP Direct Tools approach..."
-        echo "Branch: ${{ github.ref_name }}"
-        echo "Test mode: ${{ github.event.inputs.test_mode || 'dry-run' }}"
-        
-        if [ "${{ github.event.inputs.test_mode || 'dry-run' }}" = "dry-run" ]; then
-          echo "🧪 Running in dry-run mode (no actual email processing)"
-          # You could add a dry-run flag to your workflow
-          uv run workflows/job_sync_workflow.py --dry-run || echo "Dry run completed with status: $?"
-        else
-          echo "🔥 Running full test with actual email processing"
-          uv run workflows/job_sync_workflow.py || echo "Full test completed with status: $?"
-        fi
-        
-    - name: Upload logs
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: llm-mcp-test-logs
-        path: |
-          *.log
-          agent/*.log
-          workflows/*.log
-        retention-days: 7
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Set up environment variables
+        run: |
+          echo "OPENROUTER_KEY=${{ secrets.OPENROUTER_KEY }}" >> .env
+          echo "NOTION_TOKEN=${{ secrets.NOTION_TOKEN }}" >> .env
+          echo "NOTION_DATABASE_ID=${{ secrets.NOTION_DATABASE_ID }}" >> .env
+          echo "NOTION_WEEKLY_REPORTS_DB_ID=${{ secrets.NOTION_WEEKLY_REPORTS_DB_ID }}" >> .env
+          echo "OPENROUTER_MODEL=anthropic/claude-3.5-sonnet" >> .env
+
+      - name: Set up Gmail credentials
+        run: |
+          echo '${{ secrets.GMAIL_CREDENTIALS }}' > agent/credentials.json
+          echo '${{ secrets.GMAIL_TOKEN }}' > agent/token.json
+
+      - name: Test LLM + MCP Workflow
+        run: |
+          echo "🚀 Testing LLM + MCP Direct Tools approach..."
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Test mode: ${{ github.event.inputs.test_mode || 'dry-run' }}"
+
+          if [ "${{ github.event.inputs.test_mode || 'dry-run' }}" = "dry-run" ]; then
+            echo "🧪 Running in dry-run mode (no actual email processing)"
+            # You could add a dry-run flag to your workflow
+            uv run workflows/job_sync_workflow.py --dry-run || echo "Dry run completed with status: $?"
+          else
+            echo "🔥 Running full test with actual email processing"
+            uv run workflows/job_sync_workflow.py || echo "Full test completed with status: $?"
+          fi
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: llm-mcp-test-logs
+          path: |
+            *.log
+            agent/*.log
+            workflows/*.log
+          retention-days: 7

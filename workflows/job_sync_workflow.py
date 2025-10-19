@@ -97,7 +97,7 @@ class JobSyncWorkflow:
             from agent.gmail_client import list_messages, get_message, message_summary
 
             # Filter for job application related emails only
-            gmail_query = "(application OR applied OR interview OR assessment OR offer OR rejection OR 'thank you for applying' OR 'we received your application' OR 'your application has been' OR 'interview scheduled' OR 'assessment invitation') -label:spam -label:promotions"
+            gmail_query = "application OR applied OR interview OR assessment OR offer OR rejection -label:spam -label:promotions"
             msg_ids = list_messages(
                 query=gmail_query, max_results=10, newer_than_days=7
             )
@@ -124,7 +124,7 @@ class JobSyncWorkflow:
         except Exception as e:
             return f"Error fetching emails: {str(e)}"
 
-    def _call_notion_search(self, company: str, job_title: str) -> str:
+    def _call_notion_search(self, company: str = "", job_title: str = "") -> str:
         """Call Notion MCP to search for similar entries"""
         try:
             from agent.notion_utils import find_entry_by_company_title
@@ -143,10 +143,10 @@ class JobSyncWorkflow:
 
     def _call_notion_create(
         self,
-        company: str,
-        job_title: str,
-        status: str,
-        applied_on: str,
+        company: str = "",
+        job_title: str = "",
+        status: str = "",
+        applied_on: str = "",
         notes: str = "",
         app_id: str = "",
     ) -> str:
@@ -174,7 +174,9 @@ class JobSyncWorkflow:
         except Exception as e:
             return f"Error creating job application: {str(e)}"
 
-    def _call_notion_update(self, entry_id: str, status: str, notes: str = "") -> str:
+    def _call_notion_update(
+        self, entry_id: str = "", status: str = "", notes: str = ""
+    ) -> str:
         """Call Notion MCP to update existing entry"""
         try:
             from agent.notion_utils import update_entry
@@ -205,7 +207,7 @@ class JobSyncWorkflow:
 
     async def run(self):
         """Run the LLM agent with direct tool access"""
-        print("🚀 Starting JobSync with LLM + MCP tools...")
+        print("Starting JobSync with LLM + MCP tools...")
 
         try:
             # Let the LLM agent handle everything
@@ -213,12 +215,12 @@ class JobSyncWorkflow:
                 "Process recent job application emails and manage duplicates in the Notion database"
             )
 
-            print("\n✅ LLM agent completed processing!")
+            print("\nLLM agent completed processing!")
             print(f"Result: {result}")
             return result
 
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"Error: {e}")
             import traceback
 
             traceback.print_exc()

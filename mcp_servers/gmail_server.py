@@ -87,8 +87,8 @@ class GmailMCPServer:
                 newer_than_days = arguments.get("newer_than_days", 7)
 
                 try:
-                    # Filter for job application related emails only
-                    query = "(application OR applied OR interview OR assessment OR offer OR rejection OR 'thank you for applying' OR 'we received your application' OR 'your application has been' OR 'interview scheduled' OR 'assessment invitation') -label:spam -label:promotions"
+                    # Filter for job application related emails only - use simpler query
+                    query = "application OR applied OR interview OR assessment OR offer OR rejection -label:spam -label:promotions"
                     msg_ids = list_messages(
                         query=query,
                         max_results=max_results,
