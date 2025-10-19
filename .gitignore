@@ -17,6 +17,7 @@ wheels/
 # Gmail OAuth files
 agent/token.json
 agent/credentials.json
+agent/credentials_2.json
 
 # Cache file
 agent/cache.json
