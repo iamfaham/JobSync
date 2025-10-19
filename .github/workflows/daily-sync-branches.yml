@@ -1,0 +1,98 @@
+name: Daily Job Application Sync (Multi-Branch)
+
+on:
+  schedule:
+    # Run every day at 9:00 AM UTC (adjust timezone as needed)
+    - cron: "0 9 * * *"
+  workflow_dispatch: # Allow manual trigger
+    inputs:
+      branch:
+        description: 'Branch to run on'
+        required: true
+        default: 'main'
+        type: choice
+        options:
+        - main
+        - feature/llm-mcp-direct-tools
+      workflow_type:
+        description: 'Workflow type'
+        required: true
+        default: 'original'
+        type: choice
+        options:
+        - original
+        - llm-mcp
+
+jobs:
+  sync:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || 'main' }}
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Download previous Gmail token (if exists)
+        uses: actions/download-artifact@v4
+        with:
+          name: gmail-token
+          path: agent/
+        continue-on-error: true
+        if: false # Change to 'if: true' after first successful run
+
+      - name: Setup Gmail credentials
+        env:
+          GMAIL_CREDENTIALS: ${{ secrets.GMAIL_CREDENTIALS }}
+          GMAIL_TOKEN: ${{ secrets.GMAIL_TOKEN }}
+        run: |
+          mkdir -p agent
+          echo "$GMAIL_CREDENTIALS" > agent/credentials.json
+          echo "$GMAIL_TOKEN" > agent/token.json
+
+      - name: Setup environment variables
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          OPENROUTER_KEY: ${{ secrets.OPENROUTER_KEY }}
+          OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
+        run: |
+          cat > .env << EOF
+          NOTION_TOKEN=${NOTION_TOKEN}
+          NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
+          OPENROUTER_KEY=${OPENROUTER_KEY}
+          OPENROUTER_MODEL=${OPENROUTER_MODEL:-anthropic/claude-3.5-sonnet}
+          EOF
+
+      - name: Run Original Workflow
+        if: github.event.inputs.workflow_type == 'original' || (github.event.inputs.workflow_type == '' && github.ref_name == 'main')
+        run: |
+          echo "🔄 Running original workflow on branch: ${{ github.ref_name }}"
+          uv run agent/main.py
+
+      - name: Run LLM + MCP Workflow
+        if: github.event.inputs.workflow_type == 'llm-mcp' || (github.event.inputs.workflow_type == '' && github.ref_name == 'feature/llm-mcp-direct-tools')
+        run: |
+          echo "🤖 Running LLM + MCP workflow on branch: ${{ github.ref_name }}"
+          uv run workflows/job_sync_workflow.py
+
+      - name: Update Gmail token (if refreshed)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gmail-token
+          path: agent/token.json
+          retention-days: 90
