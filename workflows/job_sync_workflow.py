@@ -1,11 +1,13 @@
-from typing import TypedDict, List, Optional
-from langgraph.graph import StateGraph, END
+from typing import TypedDict, List, Optional, Dict, Any
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
+from langchain.tools import Tool
+from langchain.agents import initialize_agent, AgentType
 from pydantic import BaseModel
 import os
 import sys
 import json
+import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -33,15 +35,6 @@ class JobApplicationData(BaseModel):
     app_id: Optional[str] = None
 
 
-class JobSyncState(TypedDict):
-    emails: List[EmailData]
-    processed_emails: List[str]
-    applications: List[JobApplicationData]
-    errors: List[str]
-    current_email: Optional[EmailData]
-    current_application: Optional[JobApplicationData]
-
-
 class JobSyncWorkflow:
     def __init__(self):
         # Initialize LLM with OpenRouter
@@ -52,244 +45,184 @@ class JobSyncWorkflow:
             temperature=0,
         )
 
-        # Create the workflow graph
-        self.workflow = self._create_workflow()
+        # Create MCP tools for LLM
+        self.tools = self._create_mcp_tools()
 
-    def _create_workflow(self) -> StateGraph:
-        workflow = StateGraph(JobSyncState)
+        # Create agent with tools
+        self.agent = self._create_agent()
 
-        # Add nodes
-        workflow.add_node("fetch_emails", self._fetch_emails_node)
-        workflow.add_node("process_emails", self._process_emails_node)
-        workflow.add_node("create_entries", self._create_entries_node)
+    def _create_mcp_tools(self) -> List[Tool]:
+        """Create LangChain tools that wrap MCP calls"""
+        return [
+            Tool(
+                name="get_recent_emails",
+                description="Fetch recent job application emails from Gmail. Use this to get new emails to process.",
+                func=self._call_gmail_mcp,
+            ),
+            Tool(
+                name="search_similar_entries",
+                description="Search for similar job application entries in Notion database. Use this to check for duplicates before creating new entries.",
+                func=self._call_notion_search,
+            ),
+            Tool(
+                name="create_job_application",
+                description="Create a new job application entry in Notion. Use this for new applications that don't have duplicates.",
+                func=self._call_notion_create,
+            ),
+            Tool(
+                name="update_existing_entry",
+                description="Update an existing job application entry with new status or notes. Use this when you find a duplicate that needs updating.",
+                func=self._call_notion_update,
+            ),
+            Tool(
+                name="get_all_recent_entries",
+                description="Get all recent job application entries from the database. Use this to get an overview of existing entries.",
+                func=self._call_notion_get_all,
+            ),
+        ]
 
-        # Set entry point
-        workflow.set_entry_point("fetch_emails")
+    def _create_agent(self):
+        """Create the LLM agent with tools"""
+        return initialize_agent(
+            tools=self.tools,
+            llm=self.llm,
+            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+            verbose=True,
+            handle_parsing_errors=True,
+        )
 
-        # Add edges
-        workflow.add_edge("fetch_emails", "process_emails")
-        workflow.add_edge("process_emails", "create_entries")
-        workflow.add_edge("create_entries", END)
-
-        return workflow.compile()
-
-    async def _fetch_emails_node(self, state: JobSyncState) -> JobSyncState:
-        """Fetch recent emails from Gmail"""
-        from agent.gmail_client import list_messages, get_message, message_summary
-
+    def _call_gmail_mcp(self, query: str = "") -> str:
+        """Call Gmail MCP to get recent emails"""
         try:
-            msg_ids = list_messages(max_results=10, newer_than_days=7)
-            emails = []
+            from agent.gmail_client import list_messages, get_message, message_summary
 
+            # Filter for job application related emails only
+            gmail_query = "(application OR applied OR interview OR assessment OR offer OR rejection OR 'thank you for applying' OR 'we received your application' OR 'your application has been' OR 'interview scheduled' OR 'assessment invitation') -label:spam -label:promotions"
+            msg_ids = list_messages(
+                query=gmail_query, max_results=10, newer_than_days=7
+            )
+
+            emails = []
             for msg_id in msg_ids:
                 msg = get_message(msg_id["id"])
                 summary = message_summary(msg)
                 emails.append(
-                    EmailData(
-                        id=summary["id"],
-                        subject=summary.get("subject", ""),
-                        sender=summary.get("from", ""),
-                        date=summary.get("date", ""),
-                        text=summary.get("text", ""),
-                        snippet=summary.get("snippet", ""),
-                    )
+                    {
+                        "id": summary["id"],
+                        "subject": summary.get("subject", ""),
+                        "sender": summary.get("from", ""),
+                        "date": summary.get("date", ""),
+                        "text": summary.get("text", ""),
+                        "snippet": summary.get("snippet", ""),
+                    }
                 )
 
-            print(f"[FETCH] Retrieved {len(emails)} emails from Gmail")
-            return {**state, "emails": emails}
+            return f"Retrieved {len(emails)} emails from Gmail:\n" + json.dumps(
+                emails, indent=2
+            )
+
         except Exception as e:
-            print(f"[ERROR] Failed to fetch emails: {str(e)}")
-            return {**state, "errors": [f"Error fetching emails: {str(e)}"]}
+            return f"Error fetching emails: {str(e)}"
 
-    def _format_emails_for_llm(self, emails: List[EmailData]) -> str:
-        """Format all emails into a single text for LLM processing"""
-        emails_text = "=== EMAIL BATCH TO PROCESS ===\n\n"
+    def _call_notion_search(self, company: str, job_title: str) -> str:
+        """Call Notion MCP to search for similar entries"""
+        try:
+            from agent.notion_utils import find_entry_by_company_title
 
-        for i, email in enumerate(emails, 1):
-            emails_text += f"EMAIL {i}:\n"
-            emails_text += f"Subject: {email.subject}\n"
-            emails_text += f"From: {email.sender}\n"
-            emails_text += f"Date: {email.date}\n"
-            emails_text += f"Content: {email.text[:2000]}...\n"  # Limit content
-            emails_text += f"---\n\n"
+            # Search for existing entry
+            existing = find_entry_by_company_title(company, job_title)
 
-        return emails_text
+            if existing:
+                props = existing.get("properties", {})
+                return f"Found existing entry: {company} - {job_title} (ID: {existing['id']})"
+            else:
+                return f"No existing entry found for {company} - {job_title}"
 
-    async def _llm_process_all_emails(
-        self, emails_text: str
-    ) -> List[JobApplicationData]:
-        """Use LLM to process all emails and return deduplicated applications"""
+        except Exception as e:
+            return f"Error searching entries: {str(e)}"
 
-        prompt = f"""
-        You are an expert at processing job application emails. You will receive multiple emails and need to extract job applications while avoiding duplicates.
+    def _call_notion_create(
+        self,
+        company: str,
+        job_title: str,
+        status: str,
+        applied_on: str,
+        notes: str = "",
+        app_id: str = "",
+    ) -> str:
+        """Call Notion MCP to create new entry"""
+        try:
+            from agent.notion_utils import create_or_update_entry
 
-        EMAILS TO PROCESS:
-        {emails_text}
+            result, was_updated = create_or_update_entry(
+                company=company,
+                job_title=job_title,
+                status=status,
+                applied_on=applied_on,
+                notes=notes,
+                app_id=app_id,
+            )
 
-        DEDUPLICATION RULES:
-        1. Same company = Same application (regardless of job title variations)
-        2. Status progression: Applied → Assessment → Interview → Offer → Rejected
-        3. Use the most advanced status for the application
-        4. Combine notes from all related emails
-        5. Use the earliest application date
-        6. Preserve Application IDs when available
+            if result:
+                action = "Updated" if was_updated else "Created"
+                return f"{action} job application: {company} - {job_title}"
+            else:
+                return (
+                    f"Failed to create/update job application: {company} - {job_title}"
+                )
 
-        EXAMPLES:
-        - "Ramp Software Engineer application received" + "Ramp coding assessment" = ONE application with status "Assessment"
-        - "Google SDE application" + "Google SDE II interview scheduled" = ONE application with status "Interview"
-        - "Amazon rejection" + "Amazon new application" = TWO separate applications (different time periods)
+        except Exception as e:
+            return f"Error creating job application: {str(e)}"
 
-        IMPORTANT:
-        - If multiple emails are from the same company, merge them into one application
-        - Use the most recent status (e.g., if one email says "Applied" and another says "Assessment", use "Assessment")
-        - Combine notes from related emails
-        - Use the earliest application date
-        - Extract Application IDs when available
+    def _call_notion_update(self, entry_id: str, status: str, notes: str = "") -> str:
+        """Call Notion MCP to update existing entry"""
+        try:
+            from agent.notion_utils import update_entry
 
-        Return ONLY a JSON array of unique applications. Each application should have:
-        {{"company", "job_title", "status", "application_date", "notes", "application_id"}}
+            result = update_entry(entry_id, status)
 
-        Status options: Applied, Assessment, Interview, Offer, Rejected
+            if result:
+                return f"Updated entry {entry_id} with status: {status}"
+            else:
+                return f"Failed to update entry {entry_id}"
 
-        Return the JSON array:
-        """
+        except Exception as e:
+            return f"Error updating entry: {str(e)}"
+
+    def _call_notion_get_all(self, days: int = 30) -> str:
+        """Call Notion MCP to get all recent entries"""
+        try:
+            from agent.notion_utils import query_recent_entries
+
+            entries = query_recent_entries(days)
+            return (
+                f"Retrieved {len(entries)} recent entries from database:\n"
+                + json.dumps(entries, indent=2)
+            )
+
+        except Exception as e:
+            return f"Error getting recent entries: {str(e)}"
+
+    async def run(self):
+        """Run the LLM agent with direct tool access"""
+        print("🚀 Starting JobSync with LLM + MCP tools...")
 
         try:
-            print("[LLM] Processing emails with deduplication...")
-            result = self.llm.invoke(prompt)
-            content = result.content.strip()
-
-            # Clean up response (remove markdown if present)
-            if content.startswith("```"):
-                content = content.split("```")[1]
-                if content.startswith("json"):
-                    content = content[4:]
-                content = content.strip()
-
-            # Parse JSON
-            applications_data = json.loads(content)
-
-            # Convert to JobApplicationData objects
-            applications = []
-            for app_data in applications_data:
-                applications.append(
-                    JobApplicationData(
-                        company=app_data.get("company", ""),
-                        job_title=app_data.get("job_title", ""),
-                        status=app_data.get("status", "Applied"),
-                        applied_on=app_data.get(
-                            "application_date", datetime.now().date().isoformat()
-                        ),
-                        notes=app_data.get("notes", ""),
-                        app_id=app_data.get("application_id"),
-                    )
-                )
-
-            print(f"[LLM] Extracted {len(applications)} unique applications")
-            return applications
-
-        except json.JSONDecodeError as e:
-            print(f"[ERROR] Failed to parse LLM response as JSON: {e}")
-            print(f"[DEBUG] LLM response: {content[:500]}...")
-            return []
-        except Exception as e:
-            print(f"[ERROR] LLM processing failed: {e}")
-            return []
-
-    async def _process_emails_node(self, state: JobSyncState) -> JobSyncState:
-        """Process all emails in a single LLM call with built-in deduplication"""
-        if not state["emails"]:
-            print("[PROCESS] No emails to process")
-            return state
-
-        print(f"[PROCESS] Processing {len(state['emails'])} emails...")
-
-        # Format all emails for LLM
-        emails_text = self._format_emails_for_llm(state["emails"])
-
-        # Single LLM call to process all emails and deduplicate
-        consolidated_applications = await self._llm_process_all_emails(emails_text)
-
-        if consolidated_applications:
-            print(
-                f"[PROCESS] Successfully processed {len(consolidated_applications)} unique applications"
+            # Let the LLM agent handle everything
+            result = self.agent.run(
+                "Process recent job application emails and manage duplicates in the Notion database"
             )
-            for app in consolidated_applications:
-                print(f"  - {app.company}: {app.job_title} ({app.status})")
-        else:
-            print("[PROCESS] No applications found in emails")
 
-        return {**state, "applications": consolidated_applications}
+            print("\n✅ LLM agent completed processing!")
+            print(f"Result: {result}")
+            return result
 
-    async def _create_entries_node(self, state: JobSyncState) -> JobSyncState:
-        """Create entries in Notion (no duplicate checking needed)"""
-        from agent.notion_utils import create_or_update_entry
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            import traceback
 
-        if not state["applications"]:
-            print("[CREATE] No applications to create")
-            return state
-
-        print(f"[CREATE] Creating {len(state['applications'])} entries in Notion...")
-
-        for app in state["applications"]:
-            try:
-                print(
-                    f"[CREATE] Processing: {app.company} - {app.job_title} ({app.status})"
-                )
-
-                result, was_updated = create_or_update_entry(
-                    company=app.company,
-                    job_title=app.job_title,
-                    status=app.status,
-                    applied_on=app.applied_on,
-                    notes=app.notes,
-                    app_id=app.app_id,
-                )
-
-                if result:
-                    action = "Updated" if was_updated else "Created"
-                    state["processed_emails"].append(
-                        f"{action}: {app.company} - {app.job_title}"
-                    )
-                    print(f"  [OK] {action} entry for {app.company}")
-                else:
-                    error_msg = f"Failed to create entry for {app.company}"
-                    state["errors"].append(error_msg)
-                    print(f"  [ERROR] {error_msg}")
-
-            except Exception as e:
-                error_msg = f"Error creating entry for {app.company}: {str(e)}"
-                state["errors"].append(error_msg)
-                print(f"  [ERROR] {error_msg}")
-
-        return state
-
-    async def run(self, initial_state: JobSyncState = None):
-        """Run the workflow"""
-        if initial_state is None:
-            initial_state = {
-                "emails": [],
-                "processed_emails": [],
-                "applications": [],
-                "errors": [],
-                "current_email": None,
-                "current_application": None,
-            }
-
-        print("🚀 Starting JobSync workflow...")
-        result = await self.workflow.ainvoke(initial_state)
-
-        print(f"\n✅ Workflow completed!")
-        print(f"   📧 Emails processed: {len(result['emails'])}")
-        print(f"   📝 Applications found: {len(result['applications'])}")
-        print(f"   ✅ Entries created: {len(result['processed_emails'])}")
-
-        if result["errors"]:
-            print(f"   ❌ Errors: {len(result['errors'])}")
-            for error in result["errors"]:
-                print(f"      - {error}")
-
-        return result
+            traceback.print_exc()
+            return None
 
 
 # Usage
