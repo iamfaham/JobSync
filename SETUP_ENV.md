@@ -505,7 +505,7 @@ Settings → Secrets and variables → Actions → New repository secret
 - `NOTION_DATABASE_ID`: from `.env`
 - `NOTION_WEEKLY_REPORTS_DB_ID`: from `.env`
 - `OPENROUTER_KEY`: from `.env`
-- Optional: `OPENROUTER_MODEL` (defaults to `anthropic/claude-3.5-sonnet`)
+- Optional: `OPENROUTER_MODEL` (defaults to `mistralai/mistral-small-3.2-24b-instruct:free`)
 
 ### 3) Workflows (already included)
 

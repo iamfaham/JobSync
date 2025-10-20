@@ -7,21 +7,21 @@ on:
   workflow_dispatch: # Allow manual trigger
     inputs:
       branch:
-        description: 'Branch to run on'
+        description: "Branch to run on"
         required: true
-        default: 'main'
+        default: "main"
         type: choice
         options:
-        - main
-        - feature/llm-mcp-direct-tools
+          - main
+          - feature/llm-mcp-direct-tools
       workflow_type:
-        description: 'Workflow type'
+        description: "Workflow type"
         required: true
-        default: 'original'
+        default: "original"
         type: choice
         options:
-        - original
-        - llm-mcp
+          - original
+          - llm-mcp
 
 jobs:
   sync:
@@ -74,7 +74,7 @@ jobs:
           NOTION_TOKEN=${NOTION_TOKEN}
           NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
           OPENROUTER_KEY=${OPENROUTER_KEY}
-          OPENROUTER_MODEL=${OPENROUTER_MODEL:-anthropic/claude-3.5-sonnet}
+          OPENROUTER_MODEL=${OPENROUTER_MODEL:-mistralai/mistral-small-3.2-24b-instruct:free}
           EOF
 
       - name: Run Original Workflow

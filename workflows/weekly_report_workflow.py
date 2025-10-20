@@ -38,7 +38,9 @@ class WeeklyReportWorkflow:
     def __init__(self):
         # Initialize LLM with OpenRouter
         self.llm = ChatOpenAI(
-            model=os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet"),
+            model=os.getenv(
+                "OPENROUTER_MODEL", "mistralai/mistral-small-3.2-24b-instruct:free"
+            ),
             base_url="https://openrouter.ai/api/v1",
             api_key=os.getenv("OPENROUTER_KEY"),
             temperature=0.3,  # Slightly more creative for summaries
