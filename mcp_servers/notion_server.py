@@ -337,6 +337,10 @@ class NotionMCPServer:
             elif name == "get_all_recent_entries":
                 days = arguments.get("days", 30)
 
+                # Convert days to integer if it's a string (common when called by LLM)
+                if isinstance(days, str):
+                    days = int(days)
+
                 try:
                     # Get all recent entries
                     resp = notion.databases.query(

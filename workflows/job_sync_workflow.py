@@ -75,10 +75,10 @@ class JobSyncWorkflow:
         try:
             from agent.gmail_client import list_messages, get_message, message_summary
 
-            # Filter for job application related emails only
-            gmail_query = "application OR applied OR interview OR assessment OR offer OR rejection -label:spam -label:promotions"
+            # More specific query for job application emails (not general job postings)
+            gmail_query = "(application OR applied OR interview OR assessment OR offer OR rejection) AND (thank you OR confirmation OR scheduled OR next steps OR decision) -label:spam -label:promotions -from:noreply -from:no-reply"
             msg_ids = list_messages(
-                query=gmail_query, max_results=10, newer_than_days=7
+                query=gmail_query, max_results=15, newer_than_days=7
             )
 
             emails = []
@@ -174,6 +174,10 @@ class JobSyncWorkflow:
         """Call Notion MCP to get all recent entries"""
         try:
             from agent.notion_utils import query_recent_entries
+
+            # Convert days to integer if it's a string (common when called by LLM)
+            if isinstance(days, str):
+                days = int(days)
 
             entries = query_recent_entries(days)
             return (

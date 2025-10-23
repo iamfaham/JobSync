@@ -121,6 +121,11 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
     
     if name == "get_weekly_data":
         days = arguments.get("days", 7)
+        
+        # Convert days to integer if it's a string (common when called by LLM)
+        if isinstance(days, str):
+            days = int(days)
+            
         try:
             data = get_weekly_application_data(days)
             if data:
