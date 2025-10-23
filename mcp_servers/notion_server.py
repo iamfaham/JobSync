@@ -1,4 +1,5 @@
 import asyncio
+import json
 from typing import List, Optional
 from mcp.server import Server
 from mcp.server.models import InitializationOptions
@@ -14,6 +15,8 @@ from agent.notion_utils import (
     create_or_update_entry,
     find_entry_by_app_id,
     create_weekly_report,
+    notion,
+    NOTION_DATABASE_ID,
 )
 
 
@@ -91,6 +94,66 @@ class NotionMCPServer:
                             "created_on": {"type": "string"},
                         },
                         "required": ["title", "week_range", "summary", "created_on"],
+                    },
+                ),
+                Tool(
+                    name="search_similar_entries",
+                    description="Search for similar job application entries in the database",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "company": {
+                                "type": "string",
+                                "description": "Company name to search for",
+                            },
+                            "job_title": {
+                                "type": "string",
+                                "description": "Job title to search for",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "description": "Maximum number of results to return",
+                                "default": 10,
+                            },
+                        },
+                        "required": ["company", "job_title"],
+                    },
+                ),
+                Tool(
+                    name="update_existing_entry",
+                    description="Update an existing job application entry",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "entry_id": {
+                                "type": "string",
+                                "description": "Notion page ID of the entry to update",
+                            },
+                            "status": {
+                                "type": "string",
+                                "description": "New status for the entry",
+                            },
+                            "notes": {
+                                "type": "string",
+                                "description": "Additional notes to append",
+                                "default": "",
+                            },
+                        },
+                        "required": ["entry_id", "status"],
+                    },
+                ),
+                Tool(
+                    name="get_all_recent_entries",
+                    description="Get all recent job application entries for duplicate detection",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "days": {
+                                "type": "integer",
+                                "description": "Number of days to look back",
+                                "default": 30,
+                            }
+                        },
                     },
                 ),
             ]
@@ -184,6 +247,157 @@ class NotionMCPServer:
                     return [
                         TextContent(
                             type="text", text=f"Error creating weekly report: {str(e)}"
+                        )
+                    ]
+
+            elif name == "search_similar_entries":
+                company = arguments["company"]
+                job_title = arguments["job_title"]
+                limit = arguments.get("limit", 10)
+
+                try:
+                    # Search for entries with similar company name
+                    resp = notion.databases.query(
+                        database_id=NOTION_DATABASE_ID,
+                        filter={
+                            "property": "Company",
+                            "rich_text": {"contains": company},
+                        },
+                        page_size=limit,
+                    )
+
+                    # Format results for LLM
+                    entries = []
+                    for page in resp.get("results", []):
+                        props = page.get("properties", {})
+                        entries.append(
+                            {
+                                "id": page["id"],
+                                "company": props.get("Company", {})
+                                .get("rich_text", [{}])[0]
+                                .get("text", {})
+                                .get("content", ""),
+                                "job_title": props.get("Job Title", {})
+                                .get("rich_text", [{}])[0]
+                                .get("text", {})
+                                .get("content", ""),
+                                "status": props.get("Status", {})
+                                .get("status", {})
+                                .get("name", ""),
+                                "applied_on": props.get("Applied On", {})
+                                .get("date", {})
+                                .get("start", ""),
+                                "notes": props.get("Notes", {})
+                                .get("rich_text", [{}])[0]
+                                .get("text", {})
+                                .get("content", ""),
+                                "app_id": props.get("Application ID", {})
+                                .get("rich_text", [{}])[0]
+                                .get("text", {})
+                                .get("content", ""),
+                            }
+                        )
+
+                    return [TextContent(type="text", text=json.dumps(entries))]
+
+                except Exception as e:
+                    return [
+                        TextContent(
+                            type="text", text=f"Error searching entries: {str(e)}"
+                        )
+                    ]
+
+            elif name == "update_existing_entry":
+                entry_id = arguments["entry_id"]
+                status = arguments["status"]
+                notes = arguments.get("notes", "")
+
+                try:
+                    # Update the existing entry
+                    update_props = {"Status": {"status": {"name": status}}}
+
+                    if notes:
+                        # Get existing notes and append new ones
+                        existing_page = notion.pages.retrieve(page_id=entry_id)
+                        existing_notes = (
+                            existing_page.get("properties", {})
+                            .get("Notes", {})
+                            .get("rich_text", [])
+                        )
+                        old_notes_text = (
+                            existing_notes[0].get("text", {}).get("content", "")
+                            if existing_notes
+                            else ""
+                        )
+                        new_notes = f"{old_notes_text}\n\n[Update] {notes}".strip()
+                        update_props["Notes"] = {
+                            "rich_text": [{"text": {"content": new_notes}}]
+                        }
+
+                    result = notion.pages.update(
+                        page_id=entry_id, properties=update_props
+                    )
+
+                    return [
+                        TextContent(
+                            type="text",
+                            text=f"Updated entry {entry_id} with status: {status}",
+                        )
+                    ]
+
+                except Exception as e:
+                    return [
+                        TextContent(type="text", text=f"Error updating entry: {str(e)}")
+                    ]
+
+            elif name == "get_all_recent_entries":
+                days = arguments.get("days", 30)
+
+                try:
+                    # Get all recent entries
+                    resp = notion.databases.query(
+                        database_id=NOTION_DATABASE_ID,
+                        page_size=100,  # Adjust based on your needs
+                    )
+
+                    # Format results for LLM
+                    entries = []
+                    for page in resp.get("results", []):
+                        props = page.get("properties", {})
+                        entries.append(
+                            {
+                                "id": page["id"],
+                                "company": props.get("Company", {})
+                                .get("rich_text", [{}])[0]
+                                .get("text", {})
+                                .get("content", ""),
+                                "job_title": props.get("Job Title", {})
+                                .get("rich_text", [{}])[0]
+                                .get("text", {})
+                                .get("content", ""),
+                                "status": props.get("Status", {})
+                                .get("status", {})
+                                .get("name", ""),
+                                "applied_on": props.get("Applied On", {})
+                                .get("date", {})
+                                .get("start", ""),
+                                "notes": props.get("Notes", {})
+                                .get("rich_text", [{}])[0]
+                                .get("text", {})
+                                .get("content", ""),
+                                "app_id": props.get("Application ID", {})
+                                .get("rich_text", [{}])[0]
+                                .get("text", {})
+                                .get("content", ""),
+                            }
+                        )
+
+                    return [TextContent(type="text", text=json.dumps(entries))]
+
+                except Exception as e:
+                    return [
+                        TextContent(
+                            type="text", text=f"Error getting recent entries: {str(e)}"
                         )
                     ]
 
