@@ -6,6 +6,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from workflows.job_sync_workflow import JobSyncWorkflow
+from shared.entry_points import run_workflow_with_error_handling
 
 
 async def daily_sync():
@@ -13,16 +14,7 @@ async def daily_sync():
     print("Starting JobSyncd with MCP + LangGraph...")
 
     workflow = JobSyncWorkflow()
-    result = await workflow.run()
-
-    if isinstance(result, dict) and "processed_emails" in result:
-        print(f"Processed {len(result['processed_emails'])} applications")
-        if result.get("errors"):
-            print(f"Errors: {result['errors']}")
-    else:
-        print(f"Result: {result}")
-
-    return result
+    return await run_workflow_with_error_handling(workflow.run)
 
 
 if __name__ == "__main__":

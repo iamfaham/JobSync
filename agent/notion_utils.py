@@ -1,12 +1,5 @@
-import os
 from notion_client import Client as NotionClient
-from dotenv import load_dotenv
-
-load_dotenv()
-
-# === ENVIRONMENT VARIABLES ===
-NOTION_TOKEN = os.getenv("NOTION_TOKEN")
-NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
+from shared.config import NOTION_TOKEN, NOTION_DATABASE_ID
 
 # === INITIALIZE CLIENT ===
 notion = NotionClient(auth=NOTION_TOKEN)
@@ -244,7 +237,7 @@ def update_entry(page_id: str, status: str):
 
 
 # === WEEKLY REPORTS DATABASE ===
-NOTION_WEEKLY_REPORTS_DB_ID = os.getenv("NOTION_WEEKLY_REPORTS_DB_ID")
+from shared.config import NOTION_WEEKLY_REPORTS_DB_ID
 
 
 def create_weekly_report(title: str, week_range: str, summary: str, created_on: str):

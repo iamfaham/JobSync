@@ -6,6 +6,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from workflows.weekly_report_workflow import WeeklyReportWorkflow
+from shared.entry_points import run_weekly_report_with_error_handling
 
 
 async def main():
@@ -23,17 +24,7 @@ async def main():
     print(f"🚀 Starting Weekly Report with MCP + LangGraph for {days} days...")
 
     workflow = WeeklyReportWorkflow()
-    result = await workflow.run(days)
-
-    if result.get("summary"):
-        print(f"✅ Weekly report generated successfully!")
-        print(f"📅 Week Range: {result.get('week_range', 'Unknown')}")
-    else:
-        print(f"❌ Failed to generate weekly report")
-        if result.get("errors"):
-            print(f"Errors: {result['errors']}")
-
-    return result
+    return await run_weekly_report_with_error_handling(workflow.run, days)
 
 
 if __name__ == "__main__":

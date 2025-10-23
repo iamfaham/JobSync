@@ -3,21 +3,16 @@ from typing import List, Dict, Optional
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from dotenv import load_dotenv
+from shared.config import GMAIL_CREDENTIALS_PATH, GMAIL_TOKEN_PATH
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 
-load_dotenv()
-
-
 def _creds():
     base_dir = os.path.dirname(os.path.abspath(__file__))  # directory of this file
-    # Allow overriding paths via environment variables for CI/CD flexibility
-    cred_path = os.getenv(
-        "GMAIL_CREDENTIALS_PATH", os.path.join(base_dir, "credentials.json")
-    )
-    token_path = os.getenv("GMAIL_TOKEN_PATH", os.path.join(base_dir, "token.json"))
+    # Use shared configuration or fallback to local paths
+    cred_path = GMAIL_CREDENTIALS_PATH or os.path.join(base_dir, "credentials.json")
+    token_path = GMAIL_TOKEN_PATH or os.path.join(base_dir, "token.json")
 
     creds = None
     # Check if we have a saved token first

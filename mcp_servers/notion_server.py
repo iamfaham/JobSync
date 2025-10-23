@@ -5,7 +5,6 @@ from mcp.server import Server
 from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
-from pydantic import BaseModel
 import sys
 import os
 
@@ -18,22 +17,7 @@ from agent.notion_utils import (
     notion,
     NOTION_DATABASE_ID,
 )
-
-
-class JobApplicationData(BaseModel):
-    company: str
-    job_title: str
-    status: str
-    applied_on: str
-    notes: str = ""
-    app_id: Optional[str] = None
-
-
-class WeeklyReportData(BaseModel):
-    title: str
-    week_range: str
-    summary: str
-    created_on: str
+from shared.models import JobApplicationData
 
 
 class NotionMCPServer:

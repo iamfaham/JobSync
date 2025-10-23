@@ -1,51 +1,28 @@
 from typing import TypedDict, List, Optional, Dict, Any
-from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
 from langchain.tools import Tool
 from langchain.agents import initialize_agent, AgentType
-from pydantic import BaseModel
 import os
 import sys
 import json
 import asyncio
 from datetime import datetime
-from dotenv import load_dotenv
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-load_dotenv()
+# Import shared modules
+from shared.models import EmailData, JobApplicationData
+from shared.utils import get_llm_config
+from shared.config import validate_config
 
-
-class EmailData(BaseModel):
-    id: str
-    subject: str
-    sender: str
-    date: str
-    text: str
-    snippet: str
-
-
-class JobApplicationData(BaseModel):
-    company: str
-    job_title: str
-    status: str
-    applied_on: str
-    notes: str = ""
-    app_id: Optional[str] = None
+# Validate configuration
+validate_config()
 
 
 class JobSyncWorkflow:
     def __init__(self):
-        # Initialize LLM with OpenRouter
-        self.llm = ChatOpenAI(
-            model=os.getenv(
-                "OPENROUTER_MODEL", "mistralai/mistral-small-3.2-24b-instruct:free"
-            ),
-            base_url="https://openrouter.ai/api/v1",
-            api_key=os.getenv("OPENROUTER_KEY"),
-            temperature=0,
-        )
+        # Initialize LLM with shared configuration
+        self.llm = get_llm_config()
 
         # Create MCP tools for LLM
         self.tools = self._create_mcp_tools()

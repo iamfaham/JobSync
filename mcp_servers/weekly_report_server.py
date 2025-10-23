@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from agent.notion_utils import get_weekly_application_data, create_weekly_report
+from shared.utils import format_entries_for_llm, format_deadlines_for_llm
 
 
 # Initialize MCP server
@@ -165,7 +166,7 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
     elif name == "format_entries_for_llm":
         entries = arguments.get("entries", [])
         try:
-            formatted_text = _format_entries_for_llm(entries)
+            formatted_text = format_entries_for_llm(entries)
             return [TextContent(
                 type="text",
                 text=formatted_text
@@ -179,7 +180,7 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
     elif name == "format_deadlines_for_llm":
         deadlines = arguments.get("deadlines", [])
         try:
-            formatted_text = _format_deadlines_for_llm(deadlines)
+            formatted_text = format_deadlines_for_llm(deadlines)
             return [TextContent(
                 type="text",
                 text=formatted_text
@@ -197,33 +198,6 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
         )]
 
 
-def _format_entries_for_llm(entries: List[Dict[str, str]]) -> str:
-    """Format entries for LLM processing"""
-    if not entries:
-        return "No recent applications found."
-    
-    entries_text = ""
-    for i, entry in enumerate(entries[:10], 1):  # Limit to 10 entries
-        entries_text += f"{i}. **{entry.get('company', 'Unknown')}** - {entry.get('job_title', 'Unknown')}\n"
-        entries_text += f"   Status: {entry.get('status', 'Applied')} | Applied: {entry.get('applied_on', 'Unknown')}\n"
-        if entry.get('notes'):
-            entries_text += f"   Notes: {entry.get('notes', '')[:100]}...\n"
-        entries_text += "\n"
-    
-    return entries_text
-
-
-def _format_deadlines_for_llm(deadlines: List[Dict[str, str]]) -> str:
-    """Format deadlines for LLM processing"""
-    if not deadlines:
-        return "No upcoming deadlines found."
-    
-    deadlines_text = ""
-    for i, deadline in enumerate(deadlines, 1):
-        deadlines_text += f"{i}. **{deadline.get('company', 'Unknown')}** - {deadline.get('job_title', 'Unknown')}\n"
-        deadlines_text += f"   Note: {deadline.get('note', '')[:200]}...\n\n"
-    
-    return deadlines_text
 
 
 # Run the server

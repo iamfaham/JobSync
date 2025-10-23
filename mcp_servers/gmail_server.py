@@ -4,22 +4,13 @@ from mcp.server import Server
 from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
-from pydantic import BaseModel
 import sys
 import os
 
 # Add parent directory to path to import existing Gmail client
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from agent.gmail_client import list_messages, get_message, message_summary
-
-
-class EmailData(BaseModel):
-    id: str
-    subject: str
-    sender: str
-    date: str
-    text: str
-    snippet: str
+from shared.models import EmailData
 
 
 class GmailMCPServer:
